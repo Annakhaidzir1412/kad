@@ -207,7 +207,7 @@ button{font-family:inherit}
   letter-spacing:.2em; text-decoration:underline; text-underline-offset:4px; cursor:pointer}
 
 /* gesaan bunyi */
-.gesaBunyi{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(26px + env(safe-area-inset-bottom));
+.gesaBunyi{position:fixed; left:50%; transform:translateX(-58%); bottom:calc(26px + env(safe-area-inset-bottom));
   z-index:81; display:none; align-items:center; gap:9px; padding:11px 18px; border-radius:40px;
   background:rgba(30,4,11,.78); border:1px solid rgba(224,197,140,.6); color:var(--krim);
   font-size:11.5px; letter-spacing:.2em; cursor:pointer; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
@@ -222,12 +222,19 @@ button{font-family:inherit}
   font-size:19px; cursor:pointer; box-shadow:0 8px 22px rgba(20,4,10,.45); display:grid; place-items:center}
 .muzik.main{animation:pusing 6s linear infinite}
 body.pentasHidup .muzik{bottom:calc(26px + env(safe-area-inset-bottom))}
-body.pentasHidup .ytkotak{bottom:calc(84px + env(safe-area-inset-bottom))}
+body.pentasHidup .ytkotak{bottom:calc(90px + env(safe-area-inset-bottom))}
 @keyframes pusing{to{transform:rotate(360deg)}}
-.ytkotak{position:fixed; right:14px; bottom:calc(162px + env(safe-area-inset-bottom)); z-index:79;
-  width:214px; height:124px; border-radius:8px; overflow:hidden; display:none;
-  border:1px solid rgba(224,197,140,.6); box-shadow:0 12px 30px rgba(20,4,10,.5)}
-.ytkotak.on{display:block}
+.ytkotak{position:fixed; right:22px; bottom:calc(166px + env(safe-area-inset-bottom)); z-index:79;
+  width:68px; height:68px; border-radius:50%; overflow:hidden; display:none;
+  border:1px solid rgba(224,197,140,.75);
+  box-shadow:0 10px 26px rgba(20,4,10,.55), inset 0 0 0 3px rgba(20,4,10,.5)}
+.ytkotak.on{display:block; animation:piring 14s linear infinite}
+@keyframes piring{to{transform:rotate(360deg)}}
+.ytkotak::after{content:""; position:absolute; left:50%; top:50%; width:12px; height:12px;
+  transform:translate(-50%,-50%); border-radius:50%; background:var(--marun-3);
+  border:1px solid rgba(224,197,140,.6); pointer-events:none}
+#ytsarang{position:absolute; left:50%; top:50%; width:122px; height:68px;
+  transform:translate(-50%,-50%) scale(1.85); transform-origin:center}
 .ytkotak iframe{width:100%; height:100%; border:0; display:block}
 
 /* ================= KAD ================= */
@@ -516,7 +523,7 @@ const CONFIG = {
   tarikhISO:"2026-10-24T11:00:00+08:00", masaTamat:"2026-10-24T16:00:00+08:00",
   rsvpURL:"https://script.google.com/macros/s/AKfycbwRzEgGCEFKtgOn7gZyUSojACwRCZpiH27-tuXHGO0pBNDZVX9vVJTZmxfAaj69hZJTMA/exec", tarikhTutupRSVP:"Sahkan kehadiran sebelum 17 Oktober 2026.",
   muzik:"",            // fail lagu sendiri, contoh: "lagu.mp3" — paling lancar
-  youtube:"rtOvBOTyX00",  // ID video YouTube
+  youtube:"NZGHXy1IAHM",  // ID video YouTube
   muzikMula: 0,           // mula lagu pada saat ke berapa (contoh: 18)
   autoBuka: true          // true = kad terus buka sendiri, tak perlu tekan
 };
