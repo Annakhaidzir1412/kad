@@ -206,14 +206,25 @@ button{font-family:inherit}
 .lihatSemua{margin-top:14px; background:none; border:0; color:var(--marun); font-size:12px;
   letter-spacing:.2em; text-decoration:underline; text-underline-offset:4px; cursor:pointer}
 
+/* gesaan bunyi */
+.gesaBunyi{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(26px + env(safe-area-inset-bottom));
+  z-index:81; display:none; align-items:center; gap:9px; padding:11px 18px; border-radius:40px;
+  background:rgba(30,4,11,.78); border:1px solid rgba(224,197,140,.6); color:var(--krim);
+  font-size:11.5px; letter-spacing:.2em; cursor:pointer; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  animation:kenyit 2.4s ease-in-out infinite}
+.gesaBunyi.on{display:flex}
+@keyframes kenyit{0%,100%{opacity:.75} 50%{opacity:1}}
+
 /* butang muzik terapung */
-.muzik{position:fixed; right:16px; bottom:calc(104px + env(safe-area-inset-bottom)); z-index:45;
+.muzik{position:fixed; right:16px; bottom:calc(104px + env(safe-area-inset-bottom)); z-index:80;
   width:48px; height:48px; border-radius:50%; border:1px solid rgba(224,197,140,.7);
   background:linear-gradient(180deg,var(--marun-2),var(--marun-3)); color:var(--emas-t);
   font-size:19px; cursor:pointer; box-shadow:0 8px 22px rgba(20,4,10,.45); display:grid; place-items:center}
 .muzik.main{animation:pusing 6s linear infinite}
+body.pentasHidup .muzik{bottom:calc(26px + env(safe-area-inset-bottom))}
+body.pentasHidup .ytkotak{bottom:calc(84px + env(safe-area-inset-bottom))}
 @keyframes pusing{to{transform:rotate(360deg)}}
-.ytkotak{position:fixed; right:14px; bottom:calc(160px + env(safe-area-inset-bottom)); z-index:45;
+.ytkotak{position:fixed; right:14px; bottom:calc(162px + env(safe-area-inset-bottom)); z-index:79;
   width:214px; height:124px; border-radius:8px; overflow:hidden; display:none;
   border:1px solid rgba(224,197,140,.6); box-shadow:0 12px 30px rgba(20,4,10,.5)}
 .ytkotak.on{display:block}
@@ -397,6 +408,7 @@ input:focus,textarea:focus{outline:2px solid var(--emas); outline-offset:1px; bo
 </nav>
 
 <button class="muzik" id="muzik" type="button" aria-label="Main muzik" hidden>&#9834;</button>
+<button class="gesaBunyi" id="gesaBunyi" type="button">&#9834; TEKAN UNTUK BUNYI</button>
 <div class="ytkotak" id="ytkotak"><div id="ytsarang"></div></div>
 
 <div class="tirai" id="tirai"></div>
@@ -502,9 +514,11 @@ const CONFIG = {
   waze:"https://waze.com/ul?q=Cantik%20Weyy%20Wedding%20And%20Event%20Hall%20Tanah%20Merah",
   maps:"https://share.google/dX9um8P48llPLaVOO",
   tarikhISO:"2026-10-24T11:00:00+08:00", masaTamat:"2026-10-24T16:00:00+08:00",
-  rsvpURL:"", tarikhTutupRSVP:"Sahkan kehadiran sebelum 17 Oktober 2026.",
+  rsvpURL:"https://script.google.com/macros/s/AKfycbwRzEgGCEFKtgOn7gZyUSojACwRCZpiH27-tuXHGO0pBNDZVX9vVJTZmxfAaj69hZJTMA/exec", tarikhTutupRSVP:"Sahkan kehadiran sebelum 17 Oktober 2026.",
   muzik:"",            // fail lagu sendiri, contoh: "lagu.mp3" — paling lancar
-  youtube:"rtOvBOTyX00"  // ID video YouTube
+  youtube:"rtOvBOTyX00",  // ID video YouTube
+  muzikMula: 0,           // mula lagu pada saat ke berapa (contoh: 18)
+  autoBuka: true          // true = kad terus buka sendiri, tak perlu tekan
 };
 
 (function(){
@@ -648,18 +662,45 @@ const CONFIG = {
   }
   if (C.muzik || C.youtube) btnMuzik.hidden = false;
 
-  function mulaMuzik(){
+  let senyap = false;
+  const gesa = $('#gesaBunyi');
+
+  function mulaMuzik(mula_senyap){
     if (muzikMain) return;
+    senyap = !!mula_senyap;
     if (audio){
-      audio.play().then(()=>{ muzikMain = true; btnMuzik.classList.add('main'); }).catch(()=>{});
+      if (C.muzikMula && audio.currentTime < 1) { try { audio.currentTime = C.muzikMula; } catch(err){} }
+      audio.muted = senyap;
+      audio.play().then(()=>{
+        muzikMain = true; btnMuzik.classList.add('main');
+        if (senyap) gesa.classList.add('on');
+      }).catch(()=>{});
     } else if (C.youtube){
       $('#ytsarang').innerHTML =
-        '<iframe src="https://www.youtube.com/embed/'+C.youtube+
-        '?autoplay=1&loop=1&playlist='+C.youtube+'&modestbranding=1&rel=0&playsinline=1" '+
+        '<iframe id="ytpemain" src="https://www.youtube.com/embed/'+C.youtube+
+        '?autoplay=1&loop=1&playlist='+C.youtube+'&modestbranding=1&rel=0&playsinline=1&enablejsapi=1'+
+        (senyap ? '&mute=1' : '')+(C.muzikMula ? '&start='+C.muzikMula : '')+'" '+
         'title="Muzik latar" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
       ytkotak.classList.add('on'); muzikMain = true; btnMuzik.classList.add('main');
+      if (senyap) gesa.classList.add('on');
     }
   }
+
+  function bukaBunyi(){
+    if (!senyap) return;
+    senyap = false;
+    if (audio){ audio.muted = false; audio.play().catch(()=>{}); }
+    const yt = document.getElementById('ytpemain');
+    if (yt && yt.contentWindow){
+      ['unMute','playVideo'].forEach(f =>
+        yt.contentWindow.postMessage(JSON.stringify({event:'command', func:f, args:[]}), '*'));
+      yt.contentWindow.postMessage(JSON.stringify({event:'command', func:'setVolume', args:[60]}), '*');
+    }
+    gesa.classList.remove('on');
+  }
+  gesa.addEventListener('click', bukaBunyi);
+  ['pointerdown','touchstart','keydown'].forEach(ev =>
+    document.addEventListener(ev, bukaBunyi, { once:false, passive:true }));
   function hentiMuzik(){
     if (audio) audio.pause();
     if (C.youtube){ $('#ytsarang').innerHTML=''; ytkotak.classList.remove('on'); }
@@ -706,23 +747,27 @@ const CONFIG = {
     clearTimeout(jam); progres.style.width='100%';
     setTimeout(()=> $('#hitam').classList.remove('on'), 1400);
     pentas.classList.add('tamat'); document.body.style.overflow='';
+    document.body.classList.remove('pentasHidup');
     setTimeout(()=> pentas.style.display='none', 1300);
   }
   $('#langkau').addEventListener('click', habis);
-  $('#butangBuka').addEventListener('click', function(){
+  function bukaJemputan(auto){
     $('#pintu').classList.add('pergi');
-    mulaMuzik();
+    mulaMuzik(auto);
     setTimeout(()=> $('#pintu').style.display='none', 900);
     if (kurangGerak) habis(); else main(0);
-  });
+  }
+  $('#butangBuka').addEventListener('click', ()=> bukaJemputan(false));
+  if (C.autoBuka) setTimeout(()=> bukaJemputan(true), 900);
   $('#ulang').addEventListener('click', function(){
     lapisan.innerHTML=''; semasa=null; berlalu=0; progres.style.width='0';
     pentas.style.display=''; pentas.classList.remove('tamat');
-    document.body.style.overflow='hidden';
-    mulaMuzik();
+    document.body.style.overflow='hidden'; document.body.classList.add('pentasHidup');
+    mulaMuzik(senyap);
     main(0);
   });
   document.body.style.overflow='hidden';
+  document.body.classList.add('pentasHidup');
 
   /* ---------- modal ---------- */
   const tirai = $('#tirai');
